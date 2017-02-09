@@ -7,9 +7,9 @@ using Google.ProtocolBuffers;
 
 namespace KBEngine
 {
-    using UnityEngine; 
-    using System; 
-    
+    using UnityEngine;
+    using System;
+
     //using MessageID = System.UInt16;
     //using MessageLength = System.UInt32;
 
@@ -23,10 +23,10 @@ namespace KBEngine
             READ_STATE_MODULEID = 3,
             READ_STATE_MSGID = 4,
             //READ_STATE_RESPONSE_TIME = 5,
-            READ_STATE_RESPONSE_FLAG =6,
+            READ_STATE_RESPONSE_FLAG = 6,
             READ_STATE_BODY = 7,
         }
-        
+
         private byte msgid = 0;
         private ushort msglen = 0;
         byte flag;
@@ -46,18 +46,18 @@ namespace KBEngine
          * responseTime int
          * responseFlag byte
          * protobuffer 
-         */ 
+         */
         private uint expectSize = 1;
         private READ_STATE state = READ_STATE.READ_STATE_MSGLEN;
         private MemoryStream stream = new MemoryStream();
-        
+
         public MessageReader()
         {
             expectSize = 2;
             state = READ_STATE.READ_STATE_MSGLEN;
         }
 
-        public void process(byte[] datas, uint length, ThreadSafeDic flowHandler)
+        public void process(byte[] datas, uint length, System.Collections.Generic.Dictionary<uint, MessageHandler> flowHandler)
         {
             //Debug.LogError("process receive Data " + length + " state " + state+" expect "+expectSize);
             uint totallen = 0;
@@ -148,8 +148,7 @@ namespace KBEngine
                         expectSize -= length;
                         break;
                     }
-                }
-                else if (state == READ_STATE.READ_STATE_RESPONSE_FLAG)
+                } else if (state == READ_STATE.READ_STATE_RESPONSE_FLAG)
                 {
                     if (length >= expectSize)
                     {
@@ -202,24 +201,38 @@ namespace KBEngine
                         var fullName = pbmsg.GetType().FullName;
                         mainLoop.queueInLoop(() =>
                         {
-                            Log.Net("ReadPacket: "+p.protoBody.ToString());
+                            Log.Net("ReadPacket: " + p.protoBody.ToString());
                         });
 
-                        MessageHandler handler = null;
-                        if (flowHandler == null)
+                        mainLoop.queueInLoop(() =>
                         {
-                            handler = msgHandle;
-                        } else if (flowHandler.Contain(flowId))
-                        {
-                            handler = flowHandler.Get(flowId);
-                            flowHandler.Remove(flowId);
-                            if (handler == null)
+                            MessageHandler handler = null;
+                            if (flowHandler == null)
                             {
-                                Debug.LogError("FlowHandlerIsNull: "+flowId);
+                                handler = msgHandle;
+                            } else if (flowHandler.ContainsKey(flowId))
+                            {
+                                handler = flowHandler[flowId];
+                                flowHandler.Remove(flowId);
+                                if (handler == null)
+                                {
+                                    Debug.LogError("FlowHandlerIsNull: " + flowId);
+                                }
+                            } else
+                            {
+                                handler = msgHandle;
                             }
-                        }else {
-                            handler = msgHandle;
-                        }
+                            if (handler != null)
+                            {
+                                handler(p);
+                            } else
+                            {
+                                Debug.LogError("MessageReader::process No handler for flow Message " + msgid + " " + flowId + " " + pbmsg.GetType() + " " + pbmsg);
+                            }
+
+                        
+                        });
+
 
                         //Debug.LogError("HandlerIs: "+flowId+" h "+handler);
                         if (fullName.Contains("Push"))
@@ -243,16 +256,7 @@ namespace KBEngine
 
                                 });
                             }
-                        } else if (handler != null)
-                        {
-                            mainLoop.queueInLoop(()=>{
-                                handler(p);
-                            });
-
-                        } else
-                        {
-                            Debug.LogError("MessageReader::process No handler for flow Message " + msgid + " " + flowId + " " + pbmsg.GetType() + " " + pbmsg);
-                        }
+                        } 
 
                         stream.clear();
                         state = READ_STATE.READ_STATE_MSGLEN;
@@ -278,4 +282,4 @@ namespace KBEngine
         }
         
     }
-} 
+}

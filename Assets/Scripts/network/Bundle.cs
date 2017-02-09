@@ -102,81 +102,9 @@ namespace KBEngine
             */
 		}
 
-		public IEnumerator SendCoroutine(NetworkInterface networkInterface, uint fId, PacketHolder par) {
-			fini (true);
-			//Debug.Log ("message Number " + streamList.Count);
-			bool resp = false;
-			if(networkInterface.valid())
-			{
-                /*
-				for(int i=0; i<streamList.Count; i++)
-				{
-					stream = streamList[i];
-				}
-                */
-
-                networkInterface.send(stream.getbuffer(), delegate(Packet p) {
-                    par.packet = p;
-                    resp = true;
-                }, fId);
-                Log.Sys("SendNetworkSuc");
-			}
-			else
-			{
-				Dbg.ERROR_MSG("Bundle::send: networkInterface invalid!");  
-			}
-			
-			//streamList.Clear();
-			//stream = new MemoryStream();
-		    float passTime = 0;
-			while (!resp && passTime < 5) {
-				yield return null;
-			    passTime += Time.deltaTime;
-			}
-		    if (!resp)
-		    {
-		        Debug.LogError("RequestTimeOut: "+fId+" con ");
-		    }
-		}
-
-        private void sendImm(NetworkInterface networkInterface, uint fId)
-        {
-            fini(true);
-            //Debug.Log ("message Number " + streamList.Count);
-            //bool resp = false;
-            if (networkInterface.valid())
-            {
-                /*
-				for(int i=0; i<streamList.Count; i++)
-				{
-					stream = streamList[i];
-				}
-                */
-                networkInterface.send(stream.getbuffer(), delegate(Packet p)
-                {
-                    //par.packet = p;
-                    //resp = true;
-                }, fId);
-            }
-            else
-            {
-                Dbg.ERROR_MSG("Bundle::send: networkInterface invalid!");
-            }
-            //streamList.Clear();
-            //stream = new MemoryStream();
-            //stream.clear();
-        }
-
-        public static IEnumerator sendSimple(UnityEngine.MonoBehaviour mo, IBuilderLite build, PacketHolder par) {
 		
-			var bundle = GetBundle();
-			var data = build.WeakBuild();
 
-			bundle.newMessage (data.GetType ());
-			var fid = bundle.writePB (data);
-			Log.Net ("send Simple "+bundle+" d "+data+" fd "+fid);
-			yield return mo.StartCoroutine(bundle.SendCoroutine(KBEngine.KBEngineApp.app.networkInterface(), fid, par));
-		}
+
 
         public static Packet GetPacketFid(IBuilderLite build) {
             var p = new Packet();
@@ -217,14 +145,6 @@ namespace KBEngine
         }
 
 
-		public static IMessageLite sendImmediate(IBuilderLite build) {
-			var bundle = GetBundle();
-			var data = build.WeakBuild ();
-			bundle.newMessage (data.GetType ());
-			var fid = bundle.writePB (data);
-			bundle.sendImm(KBEngine.KBEngineApp.app.networkInterface(), fid);
-			return data;
-		}
 		
 		public void checkStream(int v)
 		{

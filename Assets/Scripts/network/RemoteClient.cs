@@ -45,7 +45,7 @@ namespace MyLib
         public KBEngine.MessageHandler msgHandler;
         public System.Action<RemoteClientEvent> evtHandler;
 
-        private ThreadSafeDic flowHandler = new ThreadSafeDic();
+        private Dictionary<uint, MessageHandler> flowHandler = new Dictionary<uint, MessageHandler>();
 
         private IMainLoop ml;
         private Thread sendThread;
