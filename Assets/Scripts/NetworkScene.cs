@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using MyLib;
+using KBEngine;
 
 public class NetworkScene : MonoBehaviour {
     public int myId;
@@ -18,7 +19,7 @@ public class NetworkScene : MonoBehaviour {
         rc.evtHandler = EvtHandler;
         rc.msgHandler = MsgHandler;
 
-        rc.Connect("127.0.0.1", 9091);
+        rc.Connect("127.0.0.1", 12031);
         while (lastEvt == RemoteClientEvent.None)
         {
             yield return null;
@@ -32,9 +33,19 @@ public class NetworkScene : MonoBehaviour {
 
     private void EvtHandler(RemoteClientEvent evt) {
         lastEvt = evt;
+        Debug.Log("ClientEvent:"+evt);
     }
 
     public void MsgHandler(KBEngine.Packet packet)
     {
+    }
+    public void SendPacket(CGPlayerCmd.Builder cg) {
+        Log.Net("BroadcastMsg: " + cg);
+        if (rc != null)
+        {
+            Bundle bundle;
+            var data = KBEngine.Bundle.GetPacket(cg, out  bundle);
+            rc.Send(data, bundle);
+        }
     }
 }
