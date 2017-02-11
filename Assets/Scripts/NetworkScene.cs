@@ -2,8 +2,17 @@
 using System.Collections;
 using MyLib;
 using KBEngine;
+using System;
+
+public enum GameState {
+    Idle,
+    InGame,
+    GameOver,
+}
 
 public class NetworkScene : MonoBehaviour {
+    private GameState state = GameState.Idle;
+
     public int myId;
     public static NetworkScene Instance;
     private MainThreadLoop ml;
@@ -36,9 +45,33 @@ public class NetworkScene : MonoBehaviour {
         Debug.Log("ClientEvent:"+evt);
     }
 
+    private void HandleNewTurn(string[] cmds) {
+        
+    }
+
     public void MsgHandler(KBEngine.Packet packet)
     {
+        var pb = packet.protoBody;
+        var cmd = pb as GCPlayerCmd;
+        var cmds = cmd.Result.Split(' ');
+        switch(cmds[0]) {
+            case "Init":
+                Log.Net("Init:"+myId);
+                myId = Convert.ToInt32(cmds[1]);
+                break;
+            case "GameStart":
+                state = GameState.InGame;
+                break;
+            case "NewTurn":
+                HandleNewTurn(cmds);
+                break;
+            default:
+                break;    
+        }
+
     }
+
+
     public void SendPacket(CGPlayerCmd.Builder cg) {
         Log.Net("BroadcastMsg: " + cg);
         if (rc != null)
