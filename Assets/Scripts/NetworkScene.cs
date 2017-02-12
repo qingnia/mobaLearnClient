@@ -34,7 +34,8 @@ public class NetworkScene : MonoBehaviour {
             yield return null;
         }
         if(lastEvt == RemoteClientEvent.Connected) {
-            gameObject.AddComponent<Logic>();
+            var logic = gameObject.AddComponent<Logic>();
+            logic.Init();
         }
     }
 
@@ -45,9 +46,6 @@ public class NetworkScene : MonoBehaviour {
         Debug.Log("ClientEvent:"+evt);
     }
 
-    private void HandleNewTurn(string[] cmds) {
-        
-    }
 
     public void MsgHandler(KBEngine.Packet packet)
     {
@@ -61,9 +59,13 @@ public class NetworkScene : MonoBehaviour {
                 break;
             case "GameStart":
                 state = GameState.InGame;
+                Logic.Instance.GameStart();
                 break;
             case "NewTurn":
-                HandleNewTurn(cmds);
+                Logic.Instance.NewTurn(cmds);
+                break;
+            case "MakeMove":
+                Logic.Instance.UpdateMove(cmds);
                 break;
             default:
                 break;    
