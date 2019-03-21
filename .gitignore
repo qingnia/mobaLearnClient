@@ -1,0 +1,7 @@
+*.meta
+Library/metadata/*
+Library/*
+ProjectSettings/*
+obj/*
+.vs/*
+*.swp
