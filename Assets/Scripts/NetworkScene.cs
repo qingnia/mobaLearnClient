@@ -34,8 +34,10 @@ public class NetworkScene : MonoBehaviour {
             yield return null;
         }
         if(lastEvt == RemoteClientEvent.Connected) {
-            var logic = gameObject.AddComponent<Logic>();
-            logic.Init();
+            //var logic = gameObject.AddComponent<Logic>();
+            //logic.Init();
+            var mobaLogic = gameObject.AddComponent<MobaLogic>();
+            mobaLogic.Init();
         }
     }
 
@@ -59,10 +61,12 @@ public class NetworkScene : MonoBehaviour {
                 break;
             case "GameStart":
                 state = GameState.InGame;
-                Logic.Instance.GameStart();
+                //Logic.Instance.GameStart();
+                MobaLogic.Instance.MatchSuc();
                 break;
             case "NewTurn":
-                Logic.Instance.NewTurn(cmds);
+                //Logic.Instance.NewTurn(cmds);
+                MobaLogic.Instance.SyncPos(cmds);
                 break;
             case "MakeMove":
                 Logic.Instance.UpdateMove(cmds);

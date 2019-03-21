@@ -17,15 +17,15 @@ public class MainUI : MonoBehaviour {
 
     public List<GameObject> gos = new List<GameObject>();
 
-	// Use this for initialization
-	void Awake () {
+    public int offX = 258;
+    public int offY = 120;
+    // Use this for initialization
+    void Awake () {
         Instance = this;
 
         button.onClick.AddListener(OnButton);
 
         var initPos = pos.transform.localPosition;
-        var offX = 258;
-        var offY = 120;
         for(var i = 0; i < 9; i++) {
             var col = i % 3;
             var row = i / 3;
@@ -45,6 +45,16 @@ public class MainUI : MonoBehaviour {
 
         pos.gameObject.SetActive(false);
 	}
+
+    //根据棋盘位置返回实际的棋子坐标
+    public Vector2 GetPos(int px, int py)
+    {
+        var initPos = pos.transform.localPosition;
+        var ip = new Vector2(initPos.x, initPos.y);
+        var newPos = ip + new Vector2(offX * px, -offY * py);
+        return newPos;
+    }
+
     private void OnButton() {
         if(onbutton != null) {
             onbutton();
