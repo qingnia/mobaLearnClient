@@ -30,12 +30,14 @@ public class MobaLogic : MonoBehaviour
     private State state = State.Wait;
     private void Awake()
     {
+        Instance = this;
         allPlayer = new Dictionary<int, MobaState>();
     }
 
     public void Init()
     {
         MainUI.Instance.onbutton = MatchMethod;
+        uiText = MainUI.Instance.button.GetComponentInChildren<Text>();
     }
 
     private void MatchMethod()
@@ -60,13 +62,37 @@ public class MobaLogic : MonoBehaviour
     public void MoveTo(int dir)
     {
         var cmd = CGPlayerCmd.CreateBuilder();
-        cmd.Cmd = "Move " + dir;
+        cmd.Cmd = "MoveTo " + dir;
         NetworkScene.Instance.SendPacket(cmd);
+    }
+
+    public void Update()
+    {
+        if (state == State.InGame)
+        {
+            if (Input.GetKeyDown(KeyCode.W))
+            {
+                MoveTo(1);
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                MoveTo(3);
+            }
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                MoveTo(2);
+            }
+            if (Input.GetKeyDown(KeyCode.D))
+            {
+                MoveTo(0);
+            }
+        }
     }
     #endregion
     #region 服务器到客户端
     public void MatchSuc()
     {
+        Debug.LogWarning("match success");
         if (state == State.Matching)
         {
             state = State.InGame;
@@ -79,6 +105,7 @@ public class MobaLogic : MonoBehaviour
         {
             var cmds = cmd.Result.Split(' ');
             var c0 = cmds[0];
+            Debug.Log("sync state " + c0);
             if (c0 == "InitID")
             {
                 myId = System.Convert.ToInt32(cmds[1]);
@@ -100,12 +127,14 @@ public class MobaLogic : MonoBehaviour
 
     public void SyncPos(string[] cmds)
     {
-        for(var i = 1; i < cmds.Length; i+=3)
+        //Debug.Log("length:" + cmds.Length + " msg:" + cmds.ToString());
+        for(var i = 1; (i+2) < cmds.Length; i+=3)
         {
             var id = System.Convert.ToInt32(cmds[i]);
             var px = System.Convert.ToInt32(cmds[i + 1]);
             var py = System.Convert.ToInt32(cmds[i + 2]);
 
+            Debug.Log("id:" + id + " px:" + px + " py:" + py);
             if (allPlayer.ContainsKey(id))
             {
 
@@ -115,7 +144,7 @@ public class MobaLogic : MonoBehaviour
                 var mobaState = new MobaState();
                 mobaState.playerID = id;
 
-                GameObject qizi;
+                GameObject qizi = new GameObject();
                 if (id == NetworkScene.Instance.myId)
                 {
                     qizi = MainUI.Instance.O;
@@ -129,15 +158,16 @@ public class MobaLogic : MonoBehaviour
                 copyQizi.transform.parent = qizi.transform.parent;
                 copyQizi.transform.localScale = Vector3.one;
                 copyQizi.transform.localPosition = Vector3.zero;
-                mobaState.qizi = qizi;
+                mobaState.qizi = copyQizi;
                 allPlayer.Add(id, mobaState);
             }
 
-            var qizi = allPlayer[id].qizi;
+            var qizi2 = allPlayer[id].qizi;
             var p = allPlayer[id];
             p.pos = new Vector2(px, py);
             var curPos = MainUI.Instance.GetPos(px, py);
-            qizi.transform.localPosition = new Vector3(curPos.x, curPos.y, 0);
+            qizi2.transform.localPosition = new Vector3(curPos.x, curPos.y, 0);
+            qizi2.SetActive(true);
         }
     }
 

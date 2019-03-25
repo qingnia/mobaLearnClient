@@ -18,7 +18,7 @@ public class MainUI : MonoBehaviour {
     public List<GameObject> gos = new List<GameObject>();
 
     public int offX = 258;
-    public int offY = 120;
+    public int offY = 200;
     // Use this for initialization
     void Awake () {
         Instance = this;
@@ -45,6 +45,7 @@ public class MainUI : MonoBehaviour {
 
         pos.gameObject.SetActive(false);
 	}
+
 
     //根据棋盘位置返回实际的棋子坐标
     public Vector2 GetPos(int px, int py)

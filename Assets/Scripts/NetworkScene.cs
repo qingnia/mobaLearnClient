@@ -66,6 +66,7 @@ public class NetworkScene : MonoBehaviour {
                 break;
             case "NewTurn":
                 //Logic.Instance.NewTurn(cmds);
+                //MobaLogic.Instance.SyncState(cmd);
                 MobaLogic.Instance.SyncPos(cmds);
                 break;
             case "MakeMove":

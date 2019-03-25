@@ -5,3 +5,4 @@ ProjectSettings/*
 obj/*
 .vs/*
 *.swp
+Temp/*
