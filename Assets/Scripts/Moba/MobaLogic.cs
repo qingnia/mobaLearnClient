@@ -9,13 +9,22 @@ public class MobaState
     public Vector2 pos;
     public int playerID;
     public GameObject qizi;
+    public Text text;
+    public int HP;
+}
+
+public class BulletState
+{
+    public int id;
+    public GameObject go;
 }
 
 public class MobaLogic : MonoBehaviour
 {
     public int myId;
     public Dictionary<int, MobaState> allPlayer;
- 
+    public Dictionary<int, BulletState> allBullet = new Dictionary<int, BulletState>();
+
     public static MobaLogic Instance;
 
     public enum State
@@ -59,6 +68,58 @@ public class MobaLogic : MonoBehaviour
         }
     }
 
+    public void Update()
+    {
+        if (state == State.InGame)
+        {
+            if (Input.GetKey(KeyCode.Space))
+            {
+                if (Input.GetKeyDown(KeyCode.W))
+                {
+                    Skill(1);
+                }
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    Skill(3);
+                }
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    Skill(2);
+                }
+                if (Input.GetKeyDown(KeyCode.D))
+                {
+                    Skill(0);
+                }
+            }
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.W))
+                {
+                    MoveTo(1);
+                }
+                if (Input.GetKeyDown(KeyCode.S))
+                {
+                    MoveTo(3);
+                }
+                if (Input.GetKeyDown(KeyCode.A))
+                {
+                    MoveTo(2);
+                }
+                if (Input.GetKeyDown(KeyCode.D))
+                {
+                    MoveTo(0);
+                }
+            }
+        }
+    }
+
+    public void Skill(int dir)
+    {
+        var cmd = CGPlayerCmd.CreateBuilder();
+        cmd.Cmd = "Skill " + dir;
+        NetworkScene.Instance.SendPacket(cmd);
+    }
+
     public void MoveTo(int dir)
     {
         var cmd = CGPlayerCmd.CreateBuilder();
@@ -66,28 +127,6 @@ public class MobaLogic : MonoBehaviour
         NetworkScene.Instance.SendPacket(cmd);
     }
 
-    public void Update()
-    {
-        if (state == State.InGame)
-        {
-            if (Input.GetKeyDown(KeyCode.W))
-            {
-                MoveTo(1);
-            }
-            if (Input.GetKeyDown(KeyCode.S))
-            {
-                MoveTo(3);
-            }
-            if (Input.GetKeyDown(KeyCode.A))
-            {
-                MoveTo(2);
-            }
-            if (Input.GetKeyDown(KeyCode.D))
-            {
-                MoveTo(0);
-            }
-        }
-    }
     #endregion
     #region 服务器到客户端
     public void MatchSuc()
@@ -125,16 +164,50 @@ public class MobaLogic : MonoBehaviour
         }
     }
 
-    public void SyncPos(string[] cmds)
+    public void SyncBullet(string[] cmds)
     {
-        //Debug.Log("length:" + cmds.Length + " msg:" + cmds.ToString());
-        for(var i = 1; (i+2) < cmds.Length; i+=3)
+        for (var i = 1; (i + 2) < cmds.Length; i += 2)
         {
             var id = System.Convert.ToInt32(cmds[i]);
             var px = System.Convert.ToInt32(cmds[i + 1]);
             var py = System.Convert.ToInt32(cmds[i + 2]);
+            if (allBullet.ContainsKey(id))
+            {
 
-            Debug.Log("id:" + id + " px:" + px + " py:" + py);
+            }
+            else
+            {
+                var BulletS = new BulletState();
+                BulletS.id = id;
+
+                GameObject go = MainUI.Instance.bullet;
+
+                var copyQizi = (GameObject)GameObject.Instantiate(go);
+                copyQizi.transform.parent = go.transform.parent;
+                copyQizi.transform.localScale = Vector3.one;
+                copyQizi.transform.localPosition = Vector3.zero;
+                BulletS.go = copyQizi;
+                allBullet.Add(id, BulletS);
+            }
+            var qizi2 = allBullet[id].go;
+            var curPos = MainUI.Instance.GetPos(px, py);
+            qizi2.transform.localPosition = new Vector3(curPos.x, curPos.y, 0);
+            qizi2.SetActive(true);
+        }
+        //TODO : 删除死亡子弹
+    }
+
+    public void SyncPos(string[] cmds)
+    {
+        //Debug.Log("length:" + cmds.Length + " msg:" + cmds.ToString());
+        for(var i = 1; (i+2) < cmds.Length; i+=4)
+        {
+            var id = System.Convert.ToInt32(cmds[i]);
+            var px = System.Convert.ToInt32(cmds[i + 1]);
+            var py = System.Convert.ToInt32(cmds[i + 2]);
+            var hp = System.Convert.ToInt32(cmds[i + 3]);
+
+            //Debug.Log("id:" + id + " px:" + px + " py:" + py);
             if (allPlayer.ContainsKey(id))
             {
 
@@ -159,6 +232,7 @@ public class MobaLogic : MonoBehaviour
                 copyQizi.transform.localScale = Vector3.one;
                 copyQizi.transform.localPosition = Vector3.zero;
                 mobaState.qizi = copyQizi;
+                mobaState.text = copyQizi.transform.Find("HP").GetComponent<Text>();
                 allPlayer.Add(id, mobaState);
             }
 
@@ -167,6 +241,7 @@ public class MobaLogic : MonoBehaviour
             p.pos = new Vector2(px, py);
             var curPos = MainUI.Instance.GetPos(px, py);
             qizi2.transform.localPosition = new Vector3(curPos.x, curPos.y, 0);
+            allPlayer[id].text.text = hp.ToString();
             qizi2.SetActive(true);
         }
     }

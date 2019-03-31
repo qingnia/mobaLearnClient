@@ -9,6 +9,7 @@ public class MainUI : MonoBehaviour {
 
     public Button button;
     public GameObject O, X;
+    public GameObject bullet;
 
     public GameObject pos;
 
